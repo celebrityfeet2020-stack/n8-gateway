@@ -48,10 +48,15 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# 配置CORS
+# 配置CORS - 必须指定具体域名，因为前端使用credentials: 'include'
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://mythiforge.com",
+        "http://mythiforge.com",
+        "https://n8.mythiforge.com",
+        "http://n8.mythiforge.com",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
