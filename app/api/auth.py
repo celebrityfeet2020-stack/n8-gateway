@@ -19,8 +19,10 @@ class LoginRequest(BaseModel):
 
 
 class LoginResponse(BaseModel):
-    """登录响应"""
-    access_token: str
+    """登录响应 - 兼容前端期望的格式"""
+    success: bool = True
+    token: str
+    access_token: str  # 保留原有字段以兼容其他客户端
     token_type: str = "bearer"
     user: dict
 
@@ -65,6 +67,8 @@ async def login(
     await db.commit()
     
     return LoginResponse(
+        success=True,
+        token=access_token,
         access_token=access_token,
         user={
             "id": user.id,
