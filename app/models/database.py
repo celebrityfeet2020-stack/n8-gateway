@@ -22,46 +22,19 @@ class Base(DeclarativeBase):
     pass
 
 
-class UserRole(str, PyEnum):
-    """用户角色枚举 - 使用大写以匹配PostgreSQL ENUM"""
-    ADMIN = "ADMIN"
-    USER = "USER"
-
-
 class User(Base):
-    """用户模型"""
+    """用户模型 - 匹配实际数据库结构"""
     __tablename__ = "users"
     
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String(50), unique=True, nullable=False, index=True)
-    email = Column(String(100), unique=True, nullable=True)
     password_hash = Column(String(255), nullable=False)
-    role = Column(Enum(UserRole, name='user_role', create_type=False), default=UserRole.USER)
-    is_active = Column(Boolean, default=True)
+    role = Column(String(20), default='admin')
     created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    last_login = Column(DateTime, nullable=True)
     
     # 关系
-    api_keys = relationship("ApiKey", back_populates="user")
     sessions = relationship("Session", back_populates="user")
-
-
-class ApiKey(Base):
-    """API Key模型"""
-    __tablename__ = "api_keys"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    name = Column(String(100), nullable=False)
-    key_hash = Column(String(64), unique=True, nullable=False, index=True)
-    key_prefix = Column(String(20), nullable=False)
-    is_active = Column(Boolean, default=True)
-    expires_at = Column(DateTime, nullable=True)
-    last_used = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    
-    # 关系
-    user = relationship("User", back_populates="api_keys")
 
 
 class Session(Base):
@@ -78,6 +51,22 @@ class Session(Base):
     
     # 关系
     user = relationship("User", back_populates="sessions")
+
+
+# ApiKey模型暂时移除（如果数据库中没有这个表）
+class ApiKey(Base):
+    """API Key模型 - 占位符"""
+    __tablename__ = "api_keys"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    name = Column(String(100), nullable=False)
+    key_hash = Column(String(64), unique=True, nullable=False, index=True)
+    key_prefix = Column(String(20), nullable=False)
+    is_active = Column(Boolean, default=True)
+    expires_at = Column(DateTime, nullable=True)
+    last_used = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:

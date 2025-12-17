@@ -57,22 +57,19 @@ async def login(
             detail="用户名或密码错误"
         )
     
-    # 检查用户是否激活
-    if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="用户已被禁用"
-        )
-    
     # 创建访问令牌
     access_token = create_access_token(data={"sub": str(user.id)})
+    
+    # 更新最后登录时间
+    user.last_login = datetime.utcnow()
+    await db.commit()
     
     return LoginResponse(
         access_token=access_token,
         user={
             "id": user.id,
             "username": user.username,
-            "role": user.role.value if hasattr(user.role, 'value') else str(user.role)
+            "role": user.role
         }
     )
 
@@ -83,7 +80,7 @@ async def get_me(current_user: User = Depends(get_current_user)):
     return {
         "id": current_user.id,
         "username": current_user.username,
-        "role": current_user.role.value if hasattr(current_user.role, 'value') else str(current_user.role)
+        "role": current_user.role
     }
 
 
