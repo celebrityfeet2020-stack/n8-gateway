@@ -5,6 +5,7 @@ import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
 from app.core.config import settings
 from app.models.database import engine
 from app.api.auth import router as auth_router
@@ -26,7 +27,7 @@ async def lifespan(app: FastAPI):
     # 测试数据库连接
     try:
         async with engine.connect() as conn:
-            await conn.execute("SELECT 1")
+            await conn.execute(text("SELECT 1"))
         logger.info("数据库连接已建立")
     except Exception as e:
         logger.error(f"数据库连接失败: {e}")
